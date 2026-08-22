@@ -12,7 +12,7 @@ from image_client import ImageClient
 from generators.naming import generate_brand_elements, DEFAULT_MODEL as NAMING_DEFAULT_MODEL
 from generators.generate_story import generate_brand_story
 from generators.generate_colors import generate_color_recommendations
-from generators.logo import generate_logos
+from generators.logo_generator import generate_logos
 from generators.palette_image import save_palette_image  # 컬러 팔레트 시각화(8번)는 다른 담당자 영역
 
 # 내 담당 (기능 요구사항 1, 2, 8번 중 텍스트 결과 저장, 9, 10번)

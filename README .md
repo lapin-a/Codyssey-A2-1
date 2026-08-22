@@ -4,14 +4,14 @@
 
 | 파일 | 기능 요구사항 | 담당 |
 |---|---|---|
-| `generators/naming.py` | 3. 브랜드 네이밍 생성 | 팀원 |
-| `generators/slogan.py` | 4. 슬로건 생성 | 팀원 |
-| `generators/story.py` | 5. 브랜드 스토리 생성 | 팀원 |
-| `generators/color.py` | 6. 컬러 팔레트 생성 | 팀원 |
-| `generators/logo.py` | 7. 로고 시안 생성 | 팀원 |
-| `generators/palette_image.py` | 8. 컬러 팔레트 시각화(PNG) | 팀원 |
-| `main.py`, `brief.py`, `config.py` | 1, 2, 9, 10. 입력/에러처리/API키관리 | 나 |
-| `utils/save.py` | 8. 텍스트 결과 저장(JSON) | 나 |
+| `generators/naming.py` | 3. 브랜드 네이밍 생성 | 오서진 |
+| `generators/slogan.py` | 4. 슬로건 생성 | 오서진 |
+| `generators/story.py` | 5. 브랜드 스토리 생성 | 김지혜 |
+| `generators/color.py` | 6. 컬러 팔레트 생성 | 김지혜 |
+| `generators/logo.py` | 7. 로고 시안 생성 | 이창진 |
+| `generators/palette_image.py` | 8. 컬러 팔레트 시각화(PNG) | 이창진 |
+| `main.py`, `brief.py`, `config.py` | 1, 2, 9, 10. 입력/에러처리/API키관리 | 육성준 |
+| `utils/save.py` | 8. 텍스트 결과 저장(JSON) | 육성준 |
 
 각자 맡은 `generators/*.py` 파일 안의 `raise NotImplementedError(...)` 한 줄만 지우고, 그 자리에 실제 로직을 채우면 됩니다. **함수 시그니처(입력 인자)와 반환 형식은 절대 바꾸지 말아주세요** — `main.py`가 그 형식을 그대로 받아서 다음 단계에 넘기고, 최종 `brand_result.json`에 그대로 들어갑니다.
 

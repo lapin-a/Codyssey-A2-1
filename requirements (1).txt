@@ -1,4 +1,0 @@
-matplotlib
-python-dotenv
-openai
-requests
