@@ -6,12 +6,18 @@ from openai import OpenAI, APIError, AuthenticationError
 # 1. .env 파일 로드
 load_dotenv()
 
-def generate_color_recommendations(brief):
+def generate_color_recommendations(brief, brand_result):
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         raise ValueError("OPENAI_API_KEY가 설정되지 않았습니다. .env 파일을 확인해 주세요.")
 
     client = OpenAI(api_key=api_key)
+
+    # brand_result.json의 top_recommendation 데이터 추출
+    top_rec = brand_result.get("top_recommendation", {})
+    brand_name = top_rec.get("name", "정보 없음")
+    slogan = top_rec.get("slogan", "정보 없음")
+    reason = top_rec.get("reason", "정보 없음")
 
     req_palette = brief.get('output_requirement', {}).get('color_palette', {})
     main_count = req_palette.get('main_colors', 1)
@@ -28,8 +34,9 @@ def generate_color_recommendations(brief):
     - 톤앤매너: {brief.get('tone', '정보 없음')}
 
     [네이밍 및 분위기]
-    - 브랜드명: 느루 (슬로건: 천천히, 달콤하게.)
-    - 분위기: 따뜻함, 느긋함, 수제 디저트의 감성, 조용하고 포근한 공간
+    - 브랜드명: {brand_name}
+    - 슬로건: {slogan}
+    - 컨셉 및 선정 이유: {reason}
 
     [요청 사항]
     - 차분하고 아늑한 수제 카페 콘셉트에 어울리는 HEX 코드를 추천해 주세요.
@@ -89,20 +96,31 @@ def generate_color_recommendations(brief):
 
 if __name__ == "__main__":
     try:
+        # 1. brief.json 읽기
         with open("brief.json", "r", encoding="utf-8") as f:
             brief_data = json.load(f)
 
-        color_result = generate_color_recommendations(brief_data)
+        # 2. brand_result.json 읽기
+        with open("brand_result.json", "r", encoding="utf-8") as f:
+            brand_result_data = json.load(f)
+
+        # 3. 컬러 추천 결과 생성
+        color_result = generate_color_recommendations(brief_data, brand_result_data)
         
-        if color_result:
+        if color_result and "color_palette" in color_result:
             print("\n=== 컬러 추천 결과 ===")
             print(json.dumps(color_result, ensure_ascii=False, indent=2))
             
-            with open("color_result.json", "w", encoding="utf-8") as f:
-                json.dump(color_result, f, ensure_ascii=False, indent=2)
-            print("\n[성공] color_result.json 저장 완료")
+            # 4. brand_result_data 객체에 'color_palette' 키로 저장
+            brand_result_data["color_palette"] = color_result["color_palette"]
 
-    except FileNotFoundError:
-        print("[Error] brief.json 파일을 찾을 수 없습니다. 파일 경로 및 위치를 확인해 주세요.")
+            # 5. brand_result.json 파일에 최종 업데이트 저장
+            with open("brand_result.json", "w", encoding="utf-8") as f:
+                json.dump(brand_result_data, f, ensure_ascii=False, indent=2)
+                
+            print("\n[성공] brand_result.json 파일에 'color_palette' 항목이 성공적으로 업데이트되었습니다.")
+
+    except FileNotFoundError as e:
+        print(f"[Error] 필요한 JSON 파일을 찾을 수 없습니다: {e.filename}")
     except json.JSONDecodeError:
-        print("[Error] brief.json 파일의 JSON 형식이 올바르지 않습니다.")
+        print("[Error] JSON 파일의 형식이 올바르지 않습니다.")

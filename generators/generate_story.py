@@ -6,13 +6,18 @@ from openai import OpenAI, APIError, AuthenticationError
 # 1. .env 파일 로드
 load_dotenv()
 
-def generate_brand_story(brief):
-    # API 키 유무 체크
+def generate_brand_story(brief, brand_result):
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         raise ValueError("OPENAI_API_KEY가 설정되지 않았습니다. .env 파일을 확인해 주세요.")
 
     client = OpenAI(api_key=api_key)
+
+    # brand_result.json의 top_recommendation 데이터 추출
+    top_rec = brand_result.get("top_recommendation", {})
+    brand_name = top_rec.get("name", "정보 없음")
+    slogan = top_rec.get("slogan", "정보 없음")
+    reason = top_rec.get("reason", "정보 없음")
 
     story_prompt = f"""
     당신은 감성적인 브랜드 스토리텔러입니다. 
@@ -25,11 +30,12 @@ def generate_brand_story(brief):
     - 톤앤매너: {brief.get('tone', '정보 없음')}
 
     [네이밍 및 슬로건]
-    - 브랜드명: 느루 (뜻: 여유 있게 천천히 한다는 의미의 순우리말)
-    - 슬로건: 천천히, 달콤하게.
-    - 컨셉: 서두르지 않고 수제 디저트와 공간이 주는 따뜻한 여유를 음미하는 카페
+    - 브랜드명: {brand_name}
+    - 슬로건: {slogan}
+    - 컨셉 및 선정 이유: {reason}
 
     [요청 사항]
+    - '{brand_name}' 브랜드명과 '{slogan}' 슬로건의 의미 및 컨셉을 자연스럽게 녹여내어 작성해 주세요.
     - 바쁜 일상 속에서 잠시 속도를 늦추고 쉬어가는 따뜻하고 차분한 감성을 전달해 주세요.
     - 띄어쓰기 포함 약 {brief.get('output_requirement', {}).get('story_length', 300)}자 내외로 작성해 주세요.
 
@@ -64,21 +70,31 @@ def generate_brand_story(brief):
 
 if __name__ == "__main__":
     try:
-        # brief.json 읽기 시도
+        # 1. brief.json 읽기
         with open("brief.json", "r", encoding="utf-8") as f:
             brief_data = json.load(f)
 
-        story_result = generate_brand_story(brief_data)
+        # 2. brand_result.json 읽기
+        with open("brand_result.json", "r", encoding="utf-8") as f:
+            brand_result_data = json.load(f)
+
+        # 3. 스토리 생성
+        story_result = generate_brand_story(brief_data, brand_result_data)
         
-        if story_result:
+        if story_result and "story" in story_result:
             print("\n=== 브랜드 스토리 생성 결과 ===")
             print(story_result["story"])
             
-            with open("story_result.json", "w", encoding="utf-8") as f:
-                json.dump(story_result, f, ensure_ascii=False, indent=2)
-            print("\n[성공] story_result.json 저장 완료")
+            # 4. brand_result_data 객체에 'brand_story' 키로 결과 덮어쓰기/추가
+            brand_result_data["brand_story"] = story_result["story"]
 
-    except FileNotFoundError:
-        print("[Error] brief.json 파일을 찾을 수 없습니다. 파일 경로 및 위치를 확인해 주세요.")
+            # 5. brand_result.json 파일에 최종 업데이트 저장
+            with open("brand_result.json", "w", encoding="utf-8") as f:
+                json.dump(brand_result_data, f, ensure_ascii=False, indent=2)
+                
+            print("\n[성공] brand_result.json 파일에 'brand_story' 항목이 성공적으로 업데이트되었습니다.")
+
+    except FileNotFoundError as e:
+        print(f"[Error] 필요한 JSON 파일을 찾을 수 없습니다: {e.filename}")
     except json.JSONDecodeError:
-        print("[Error] brief.json 파일의 JSON 형식이 올바르지 않습니다.")
+        print("[Error] JSON 파일의 형식이 올바르지 않습니다.")

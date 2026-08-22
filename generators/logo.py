@@ -4,11 +4,22 @@ from image_client import ImageGenError
 
 
 def _pick_brand_name(naming, brief):
-    """naming(generate_naming 결과)에서 대표 브랜드명/설명을 뽑는다.
-    naming 단계가 실패해 빈 리스트로 들어올 수 있으므로 brief의 topic으로 대체한다."""
-    if naming:
+    """naming 인자에서 대표 브랜드명/설명을 뽑는다.
+
+    naming.py(generate_brand_elements)의 top_recommendation 형식
+    {"name":..., "slogan":..., "reason":...} 을 우선 지원하고,
+    과거 generate_naming() 형식인 [{"name":..., "meaning":...}, ...] 리스트도
+    호환을 위해 함께 지원한다. naming 단계가 실패해 빈 값으로 들어오면
+    brief의 topic으로 대체한다."""
+    if isinstance(naming, dict) and naming:
+        name = naming.get("name", "")
+        detail = naming.get("reason") or naming.get("slogan", "")
+        return name, detail
+
+    if isinstance(naming, list) and naming:
         top = naming[0]
         return top.get("name", ""), top.get("meaning", "")
+
     return brief.get("topic", "브랜드"), ""
 
 
@@ -58,8 +69,10 @@ def generate_logos(brief, naming, color_palette, image_client, output_dir):
     [담당: 팀원] 로고 시안 생성 (기능 요구사항 7번)
 
     입력: brief (dict) — topic/tone/keywords/logo_concepts_count 등
-          naming — generate_naming()의 결과 [{"name":..., "meaning":...}, ...] (실패 시 빈 리스트일 수 있음)
-          color_palette — generate_color_palette()의 결과 {"main":[...], "sub":[...]} (실패 시 빈 dict일 수 있음)
+          naming — naming.py(generate_brand_elements)의 top_recommendation
+                   {"name":..., "slogan":..., "reason":...} (실패 시 빈 dict일 수 있음)
+                   과거 generate_naming() 형식인 리스트도 함께 지원한다.
+          color_palette — generate_color_recommendations()의 결과 {"main":..., "sub":[...]} (실패 시 빈 dict일 수 있음)
           image_client — image_client.generate_image(prompt, save_path)로 호출
           output_dir — 이미지를 저장할 폴더 경로 (예: os.path.join(output_dir, "logo_1.png"))
 
